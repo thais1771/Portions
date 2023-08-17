@@ -10,25 +10,36 @@ import SwiftUI
 
 struct ContentView: View {
     let store: StoreOf<Content>
+    @FocusState private var focusForm1: Form1?
+
+    enum Form1: Int, Hashable {
+        case name
+        case quantity
+    }
 
     var body: some View {
         WithViewStore(self.store, observe: { $0 }) { viewStore in
             Form {
-                Section(header: Text("NEW INGREDIENT FORM")) {
-                    HStack {
-                        TextField("Name", text: viewStore.binding(get: \.txtfieldIngredientName,
-                                                                  send: Content.Action.ingredientNameTextDidChange))
-                        Spacer()
-                        Button {
-                            viewStore.send(.addIngredientBtnTapped)
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        Spacer()
-                    }
+                Section(header: Text("NEW INGREDIENT FORM"),
+                        footer: HStack {
+                            Spacer()
+                            Text("Add ingredient")
+                            Button(action: {
+                                viewStore.send(.addIngredientBtnTapped)
+                                self.focusPreviousField($focusForm1)
+                            }) {
+                                Image(systemName: "plus")
+                            }.padding(.vertical, 5)
+                        }) {
+                    TextField("Name", text: viewStore.binding(get: \.txtfieldIngredientName,
+                                                              send: Content.Action.ingredientNameTextDidChange))
+                        .focused($focusForm1, equals: .name)
+                        .onSubmit { self.focusNextField($focusForm1) }
                     HStack {
                         TextField("Quantity", text: viewStore.binding(get: \.txtfieldQuantity,
                                                                       send: Content.Action.quantityTextDidChange))
+                            .focused($focusForm1, equals: .quantity)
+                            .keyboardType(.numberPad)
                         Spacer()
                         Text("gr")
                             .foregroundColor(.secondary)
@@ -69,6 +80,8 @@ struct ContentView: View {
                             TextField("Portions", text: viewStore.binding(get: \.txtfieldRecipePortions,
                                                                           send: Content.Action.recipePortionsTextDidChange))
                                 .multilineTextAlignment(.trailing)
+                                .keyboardType(.numberPad)
+                                .scrollDismissesKeyboard(.immediately)
                         }
                     }
                     HStack {
@@ -76,6 +89,7 @@ struct ContentView: View {
                         TextField(viewStore.ingredientsUnits.rawValue.capitalized, text: viewStore.binding(get: \.desiredAmount,
                                                                                                            send: Content.Action.desiredAmounTextDidChange))
                             .multilineTextAlignment(.trailing)
+                            .keyboardType(.numberPad)
                     }
                 }
                 Section {
@@ -96,6 +110,9 @@ struct ContentView: View {
                     ResultListView(store: store)
                 }
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
     }
 }
 
@@ -113,5 +130,29 @@ struct ContentView_Previews: PreviewProvider {
                 Content()
             }
         )
+    }
+}
+
+extension View {
+    func focusNextField<F: RawRepresentable>(_ field: FocusState<F?>.Binding) where F.RawValue == Int {
+        guard let currentValue = field.wrappedValue else { return }
+        let nextValue = currentValue.rawValue + 1
+        if let newValue = F(rawValue: nextValue) {
+            field.wrappedValue = newValue
+        }
+    }
+
+    func focusPreviousField<F: RawRepresentable>(_ field: FocusState<F?>.Binding) where F.RawValue == Int {
+        guard let currentValue = field.wrappedValue else { return }
+        let nextValue = currentValue.rawValue - 1
+        if let newValue = F(rawValue: nextValue) {
+            field.wrappedValue = newValue
+        }
+    }
+}
+
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
