@@ -17,6 +17,12 @@ class PortionerManager {
         }
     }
     
+    static func calculate(ingredients: [Ingredient], portions: Int, for desiredPortions: Int) -> [Ingredient] {
+        ingredients.map { ingredient in
+            Ingredient(name: ingredient.name, quantity: (ingredient.quantity / portions) * desiredPortions)
+        }
+    }
+    
     static func sumIngredientsQuantity(_ ingredients: [Ingredient]) -> Int {
         return ingredients.reduce(0) { $0 + $1.quantity }
     }

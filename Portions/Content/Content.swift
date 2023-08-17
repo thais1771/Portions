@@ -72,12 +72,18 @@ struct Content: Reducer {
                 }
             case .converBtnTapped:
                 if state.ingredients.isEmpty { return .none }
-
                 guard let desiredAmount = Int(state.desiredAmount) else { return .none }
+                
+                var ingredients: [Ingredient] = []
+
                 if state.ingredientsUnits == .gr {
-                    let ingredients = PortionerManager.calculate(ingredients: state.ingredients, for: desiredAmount)
-                    state.resultState = ResultList.State(ingredients: ingredients)
+                    ingredients.append(contentsOf: PortionerManager.calculate(ingredients: state.ingredients, for: desiredAmount))
+                } else {
+                    guard let recipePortions = Int(state.txtfieldRecipePortions) else { return .none }
+                    ingredients.append(contentsOf: PortionerManager.calculate(ingredients: state.ingredients, portions: recipePortions, for: desiredAmount))
                 }
+
+                state.resultState = ResultList.State(ingredients: ingredients)
                 return .none
 
             // Others
