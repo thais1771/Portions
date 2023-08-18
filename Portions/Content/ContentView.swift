@@ -19,99 +19,117 @@ struct ContentView: View {
 
     var body: some View {
         WithViewStore(self.store, observe: { $0 }) { viewStore in
-            Form {
-                Section(header: Text("NEW INGREDIENT FORM"),
-                        footer: HStack {
-                            Spacer()
-                            Text("Add ingredient")
-                            Button(action: {
-                                viewStore.send(.addIngredientBtnTapped)
-                                self.focusPreviousField($focusForm1)
-                            }) {
-                                Image(systemName: "plus")
-                            }.padding(.vertical, 5)
-                        }) {
-                    TextField("Name", text: viewStore.binding(get: \.txtfieldIngredientName,
-                                                              send: Content.Action.ingredientNameTextDidChange))
-                        .focused($focusForm1, equals: .name)
-                        .onSubmit { self.focusNextField($focusForm1) }
-                    HStack {
-                        TextField("Quantity", text: viewStore.binding(get: \.txtfieldQuantity,
-                                                                      send: Content.Action.quantityTextDidChange))
-                            .focused($focusForm1, equals: .quantity)
-                            .keyboardType(.numberPad)
-                        Spacer()
-                        Text("gr")
-                            .foregroundColor(.secondary)
-                    }
-                }
-                if !viewStore.ingredients.isEmpty {
-                    Section(header: Text("INGREDIENTS LIST"),
+            NavigationStack {
+                Form {
+                    Section(header: Text("NEW INGREDIENT FORM"),
                             footer: HStack {
                                 Spacer()
-                                Text("TOTAL: \(PortionerManager.sumIngredientsQuantity(viewStore.ingredients)) gr")
+                                Text("Add ingredient")
+                                Button(action: {
+                                    viewStore.send(.addIngredientBtnTapped)
+                                    self.focusPreviousField($focusForm1)
+                                }) {
+                                    Image(systemName: "plus")
+                                }.padding(.vertical, 5)
                             }) {
-                        ForEach(viewStore.ingredients, id: \.self) { ingredient in
-                            HStack {
-                                Text(ingredient.name)
-                                Spacer()
-                                Text("\(ingredient.quantity) gr")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .onDelete { indexSet in
-                            viewStore.send(.deleteIngredientSwipeAction(indexSet: indexSet))
-                        }
-                    }
-                }
-                Section(header: Text("DESIRED AMOUNT")) {
-                    HStack {
-                        Text("Ingredients units")
-                        Spacer()
-                        Picker("", selection: viewStore.binding(get: \.ingredientsUnits, send: Content.Action.ingredientsUnitsPickerDidSelect)) {
-                            ForEach(IngredientsUnits.allCases, id: \.self) { unit in
-                                Text(unit.rawValue.capitalized)
-                            }
-                        }.pickerStyle(.automatic)
-                    }
-                    if viewStore.ingredientsUnits == .portions {
+                        TextField("Name", text: viewStore.binding(get: \.txtfieldIngredientName,
+                                                                  send: Content.Action.ingredientNameTextDidChange))
+                            .focused($focusForm1, equals: .name)
+                            .onSubmit { self.focusNextField($focusForm1) }
                         HStack {
-                            Text("Entered recipe portions")
-                            TextField("Portions", text: viewStore.binding(get: \.txtfieldRecipePortions,
-                                                                          send: Content.Action.recipePortionsTextDidChange))
+                            TextField("Quantity", text: viewStore.binding(get: \.txtfieldQuantity,
+                                                                          send: Content.Action.quantityTextDidChange))
+                                .focused($focusForm1, equals: .quantity)
+                                .keyboardType(.numberPad)
+                            Spacer()
+                            Text("gr")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    if !viewStore.ingredients.isEmpty {
+                        Section(header: Text("INGREDIENTS LIST"),
+                                footer: HStack {
+                                    Spacer()
+                                    Text("TOTAL: \(PortionerManager.sumIngredientsQuantity(viewStore.ingredients)) gr")
+                                }) {
+                            ForEach(viewStore.ingredients, id: \.self) { ingredient in
+                                HStack {
+                                    Text(ingredient.name)
+                                    Spacer()
+                                    Text("\(ingredient.quantity) gr")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .onDelete { indexSet in
+                                viewStore.send(.deleteIngredientSwipeAction(indexSet: indexSet))
+                            }
+                        }
+                    }
+                    Section(
+                        header: Text("Data")
+                    ) {
+                        HStack {
+                            Text("Ingredients units")
+                            Spacer()
+                            Picker("", selection: viewStore.binding(get: \.ingredientsUnits, send: Content.Action.ingredientsUnitsPickerDidSelect)) {
+                                ForEach(IngredientsUnits.allCases, id: \.self) { unit in
+                                    Text(unit.rawValue.capitalized)
+                                }
+                            }.pickerStyle(.navigationLink)
+                        }
+                        if viewStore.ingredientsUnits == .portions {
+                            HStack {
+                                Text("Entered recipe portions")
+                                TextField("Portions", text: viewStore.binding(get: \.txtfieldRecipePortions,
+                                                                              send: Content.Action.recipePortionsTextDidChange))
+                                    .multilineTextAlignment(.trailing)
+                                    .keyboardType(.numberPad)
+                                    .scrollDismissesKeyboard(.immediately)
+                            }
+                        }
+                        HStack {
+                            Text("Desired amount")
+                            TextField(viewStore.ingredientsUnits.rawValue.capitalized, text: viewStore.binding(get: \.desiredAmount,
+                                                                                                               send: Content.Action.desiredAmounTextDidChange))
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
-                                .scrollDismissesKeyboard(.immediately)
                         }
                     }
-                    HStack {
-                        Text("Desired amount")
-                        TextField(viewStore.ingredientsUnits.rawValue.capitalized, text: viewStore.binding(get: \.desiredAmount,
-                                                                                                           send: Content.Action.desiredAmounTextDidChange))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.numberPad)
+                    Section {
+                        Button {
+                            viewStore.send(.converBtnTapped)
+                        } label: {
+                            VStack(alignment: .center) {
+                                Text("Convert")
+                            }.frame(maxWidth: .infinity)
+                        }
                     }
                 }
-                Section {
-                    Button {
-                        viewStore.send(.converBtnTapped)
-                    } label: {
-                        VStack(alignment: .center) {
-                            Text("Convert")
-                        }.frame(maxWidth: .infinity)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Ok") {
+                            viewStore.send(.addIngredientBtnTapped)
+                            hideKeyboard()
+                        }
+                    }
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        Button {
+                            // TODO: Add action
+                        } label: {
+                            Image(systemName: "list.bullet")
+                        }
                     }
                 }
             }
         }
         .sheet(store: store.scope(
             state: \.$resultState,
-            action: Content.Action.resultSheet)) { store in
-                NavigationView {
-                    ResultListView(store: store)
-                }
-        }
-        .onTapGesture {
-            hideKeyboard()
+            action: Content.Action.resultSheet
+        )) { store in
+            NavigationView {
+                ResultListView(store: store)
+            }
         }
     }
 }

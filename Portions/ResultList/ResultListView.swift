@@ -13,12 +13,16 @@ struct ResultListView: View {
 
     var body: some View {
         WithViewStore(self.store, observe: { $0 }) { viewStore in
-            VStack {
+            VStack(spacing: 20) {
                 Text("Ingredients")
                     .foregroundColor(.primary)
                     .bold()
-                    .font(Font.system(size: 30))
+                    .font(Font.system(size: 35))
                     .padding(.top, 50)
+                Text("Portions for: \(viewStore.portions)")
+                    .foregroundColor(.primary)
+                    .bold()
+                    .font(Font.system(size: 20))
                 Form {
                     Section(footer: HStack {
                         Spacer()
@@ -44,6 +48,7 @@ struct ResultListView: View {
                     .foregroundColor(.primary)
                     .edgesIgnoringSafeArea(.all)
                     .opacity(0.3)
+                    .background(Color("secondaryBkg"))
             )
         }
     }
@@ -58,7 +63,9 @@ struct ResultListView_Previews: PreviewProvider {
                                                              Ingredient(name: "Yogurt",
                                                                         quantity: 60),
                                                              Ingredient(name: "Honey",
-                                                                        quantity: 5)])) {
+                                                                        quantity: 5)],
+                                               portions: 2)
+            ) {
                 ResultList()
             }
         )

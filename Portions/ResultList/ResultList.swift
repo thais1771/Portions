@@ -15,6 +15,7 @@ struct ResultList: Reducer {
 
     struct State: Equatable {
         let ingredients: [Ingredient]
+        let portions: Int
     }
 
     var body: some ReducerOf<Self> {

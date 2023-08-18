@@ -44,7 +44,7 @@ struct Content: Reducer {
         var txtfieldQuantity = ""
         var txtfieldRecipePortions = ""
         var desiredAmount = ""
-        var error: String?
+        var error: String? = nil
         var ingredientsUnits = IngredientsUnits.portions
         var resultIngredients: [Ingredient] = []
         @PresentationState var resultState: ResultList.State?
@@ -83,7 +83,7 @@ struct Content: Reducer {
                     ingredients.append(contentsOf: PortionerManager.calculate(ingredients: state.ingredients, portions: recipePortions, for: desiredAmount))
                 }
 
-                state.resultState = ResultList.State(ingredients: ingredients)
+                state.resultState = ResultList.State(ingredients: ingredients, portions: desiredAmount)
                 return .none
 
             // Others
