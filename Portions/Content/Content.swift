@@ -16,6 +16,7 @@ struct Ingredient: Hashable {
 enum IngredientsUnits: String, CaseIterable {
     case portions
     case gr
+    case ml
 }
 
 struct Content: Reducer {
@@ -29,13 +30,16 @@ struct Content: Reducer {
         // Button tapped
         case addIngredientBtnTapped
         case converBtnTapped
+        case menuBtnTapped
 
         // Others
         case deleteIngredientSwipeAction(indexSet: IndexSet)
-        case ingredientsUnitsPickerDidSelect(unit: IngredientsUnits)
+        case recipeUnitsPickerDidSelect(unit: IngredientsUnits)
+        case ingredientUnitPickerDidSelect(unit: IngredientsUnits)
 
         // Result List
         case resultSheet(PresentationAction<ResultList.Action>)
+        case menuPresent(PresentationAction<Menu.Action>)
     }
 
     struct State: Equatable {
@@ -45,9 +49,11 @@ struct Content: Reducer {
         var txtfieldRecipePortions = ""
         var desiredAmount = ""
         var error: String? = nil
-        var ingredientsUnits = IngredientsUnits.portions
+        var recipeUnits = IngredientsUnits.portions
+        var ingredientUnit = IngredientsUnits.gr
         var resultIngredients: [Ingredient] = []
         @PresentationState var resultState: ResultList.State?
+        @PresentationState var menuState: Menu.State?
     }
 
     var body: some ReducerOf<Self> {
@@ -73,33 +79,40 @@ struct Content: Reducer {
             case .converBtnTapped:
                 if state.ingredients.isEmpty { return .none }
                 guard let desiredAmount = Int(state.desiredAmount) else { return .none }
-                
+
                 var ingredients: [Ingredient] = []
 
-                if state.ingredientsUnits == .gr {
+                if state.recipeUnits == .gr {
                     ingredients.append(contentsOf: PortionerManager.calculate(ingredients: state.ingredients, for: desiredAmount))
                 } else {
                     guard let recipePortions = Int(state.txtfieldRecipePortions) else { return .none }
                     ingredients.append(contentsOf: PortionerManager.calculate(ingredients: state.ingredients, portions: recipePortions, for: desiredAmount))
                 }
-
                 state.resultState = ResultList.State(ingredients: ingredients, portions: desiredAmount)
-                return .none
+            case .menuBtnTapped:
+                state.menuState = Menu.State()
 
             // Others
             case .deleteIngredientSwipeAction(let indexSet):
                 state.ingredients.remove(atOffsets: indexSet)
-            case .ingredientsUnitsPickerDidSelect(let unit):
-                state.ingredientsUnits = unit
+            case .recipeUnitsPickerDidSelect(let unit):
+                state.recipeUnits = unit
+            case .ingredientUnitPickerDidSelect(let unit):
+                state.ingredientUnit = unit
 
             // Result List
             case .resultSheet:
+                break
+            case .menuPresent:
                 break
             }
             return .none
         }
         .ifLet(\.$resultState, action: /Action.resultSheet) {
             ResultList()
+        }
+        .ifLet(\.$menuState, action: /Action.menuPresent) {
+            Menu()
         }
     }
 }

@@ -31,14 +31,7 @@ struct Menu: Reducer {
     }
 
     struct State: Equatable {
-        var options: [MenuOption] = [MenuOption(title: "Share",
-                                                icon: "square.and.arrow.up",
-                                                action: {
-                                                    if let url = URL(string: "https://www.hackingwithswift.com") {
-                                                        UIApplication.shared.open(url)
-                                                    }
-                                                }),
-                                     MenuOption(title: "Report a bug",
+        var options: [MenuOption] = [MenuOption(title: "Report a bug",
                                                 icon: "ladybug",
                                                 action: {
                                                     if let url = URL(string: "mailto:thais1771@gmail.com") {

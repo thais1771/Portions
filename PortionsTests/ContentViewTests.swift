@@ -15,7 +15,7 @@ let contentDefaultState = Content.State(ingredients: [],
                                         txtfieldRecipePortions: "",
                                         desiredAmount: "200",
                                         error: nil,
-                                        ingredientsUnits: .gr,
+                                        recipeUnits: .gr,
                                         resultIngredients: [],
                                         resultState: nil)
 
@@ -67,9 +67,15 @@ final class ContentViewTests: XCTestCase {
         }
     }
     
-    func testIngredientsUnitsPickerDidSelect() async throws {
-        await store.send(.ingredientsUnitsPickerDidSelect(unit: .portions)) {
-            $0.ingredientsUnits = .portions
+    func testRecipeUnitsPickerDidSelect() async throws {
+        await store.send(.recipeUnitsPickerDidSelect(unit: .portions)) {
+            $0.recipeUnits = .portions
+        }
+    }
+    
+    func testIngredientUnitPickerDidSelect() async throws {
+        await store.send(.ingredientUnitPickerDidSelect(unit: .ml)) {
+            $0.ingredientUnit = .ml
         }
     }
 }

@@ -30,7 +30,12 @@ struct ContentView: View {
                                     self.focusPreviousField($focusForm1)
                                 }) {
                                     Image(systemName: "plus")
-                                }.padding(.vertical, 5)
+                                }
+                                .padding(.vertical, 5)
+                                .disabled(
+                                    viewStore.txtfieldIngredientName.isEmpty ||
+                                    viewStore.txtfieldQuantity.isEmpty
+                                )
                             }) {
                         TextField("Name", text: viewStore.binding(get: \.txtfieldIngredientName,
                                                                   send: Content.Action.ingredientNameTextDidChange))
@@ -42,8 +47,11 @@ struct ContentView: View {
                                 .focused($focusForm1, equals: .quantity)
                                 .keyboardType(.numberPad)
                             Spacer()
-                            Text("gr")
-                                .foregroundColor(.secondary)
+                            Picker("", selection: viewStore.binding(get: \.ingredientUnit, send: Content.Action.ingredientUnitPickerDidSelect)) {
+                                ForEach([IngredientsUnits.gr, IngredientsUnits.ml], id: \.self) { unit in
+                                    Text(unit.rawValue.capitalized)
+                                }
+                            }.pickerStyle(.navigationLink)
                         }
                     }
                     if !viewStore.ingredients.isEmpty {
@@ -71,13 +79,13 @@ struct ContentView: View {
                         HStack {
                             Text("Ingredients units")
                             Spacer()
-                            Picker("", selection: viewStore.binding(get: \.ingredientsUnits, send: Content.Action.ingredientsUnitsPickerDidSelect)) {
-                                ForEach(IngredientsUnits.allCases, id: \.self) { unit in
+                            Picker("", selection: viewStore.binding(get: \.recipeUnits, send: Content.Action.recipeUnitsPickerDidSelect)) {
+                                ForEach([IngredientsUnits.portions, IngredientsUnits.gr], id: \.self) { unit in
                                     Text(unit.rawValue.capitalized)
                                 }
                             }.pickerStyle(.navigationLink)
                         }
-                        if viewStore.ingredientsUnits == .portions {
+                        if viewStore.recipeUnits == .portions {
                             HStack {
                                 Text("Entered recipe portions")
                                 TextField("Portions", text: viewStore.binding(get: \.txtfieldRecipePortions,
@@ -89,7 +97,7 @@ struct ContentView: View {
                         }
                         HStack {
                             Text("Desired amount")
-                            TextField(viewStore.ingredientsUnits.rawValue.capitalized, text: viewStore.binding(get: \.desiredAmount,
+                            TextField(viewStore.recipeUnits.rawValue.capitalized, text: viewStore.binding(get: \.desiredAmount,
                                                                                                                send: Content.Action.desiredAmounTextDidChange))
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
@@ -115,18 +123,24 @@ struct ContentView: View {
                     }
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         Button {
-                            // TODO: Add action
+                            viewStore.send(.menuBtnTapped)
                         } label: {
                             Image(systemName: "list.bullet")
                         }
                     }
                 }
+                .navigationDestination(
+                    store: store.scope(
+                        state: \.$menuState,
+                        action: Content.Action.menuPresent)) {
+                    MenuView(store: $0)
+                }
             }
         }
-        .sheet(store: store.scope(
-            state: \.$resultState,
-            action: Content.Action.resultSheet
-        )) { store in
+        .sheet(
+            store: store.scope(
+                state: \.$resultState,
+                action: Content.Action.resultSheet)) { store in
             NavigationView {
                 ResultListView(store: store)
             }
